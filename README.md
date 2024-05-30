@@ -5,6 +5,6 @@
 -> CIRCUIT BREAKER  <br>
 -> DOCKER DEPLOYMENT  <br>
 -> DEPLOYMENT OF MICROSERVICES  <br>
--> JENKINIS
+-> JENKINIS PIPELINE
 
 This folder contains all the important stuffs
