@@ -7,6 +7,9 @@
 -> DEPLOYMENT OF MICROSERVICES  <br>
 -> JENKINIS PIPELINE
 
+  if (user != null && **passwordEncoder.matches**(loginRequest.getPassword(), user.getPassword())) {
+
+
 This folder contains all the important stuffs
 may be i will get banking project in ibm lets see whatever i get but i want nearby location
 bkc would be great or airoli
