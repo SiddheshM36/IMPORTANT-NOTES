@@ -666,3 +666,140 @@ FACADE    = SIMPLIFY
 
 **Sabse important difference:**
 Adapter **interface ko change/translate** karta hai, Decorator **behavior add** karta hai, Proxy **access control** karta hai, aur Facade **complexity hide** karta hai.
+
+
+
+
+
+---------------------------- important ----------------------------------------------
+
+
+
+
+Aaja bhai, poore Iron Man suit ke example se **Factory**, **Strategy**, aur **Dono ka Combo** ek jhatke mein recap kar lete hain!
+
+---
+
+### 1. Factory Pattern = Suit Ko Build Karna (Creation)
+
+Tony Stark ke paas alag-alag missions ke liye alag Suits hain (Hulkbuster, Stealth Suit, Mark 85).
+
+Factory ka kaam hai **Mission type dekh kar NAYA SUIT OBJECT build karke dena**.
+
+```java
+// Common Interface
+interface IronManSuit {
+    void displayArmor();
+}
+
+class Hulkbuster implements IronManSuit {
+    public void displayArmor() { System.out.println("Heavy Armor Activated!"); }
+}
+
+class StealthSuit implements IronManSuit {
+    public void displayArmor() { System.out.println("Invisible Camouflage Activated!"); }
+}
+
+// FACTORY CLASS: Naya Suit Build Karke Degi
+class SuitFactory {
+    public static IronManSuit buildSuit(String missionType) {
+        if ("HEAVY_FIGHT".equalsIgnoreCase(missionType)) {
+            return new Hulkbuster(); // Naya Heavy Object
+        } else if ("STEALTH".equalsIgnoreCase(missionType)) {
+            return new StealthSuit(); // Naya Stealth Object
+        }
+        throw new IllegalArgumentException("Unknown Mission");
+    }
+}
+
+// USAGE: Mission heavy hai -> Factory ne NAYA Hulkbuster suit bana ke diya!
+IronManSuit mySuit = SuitFactory.buildSuit("HEAVY_FIGHT");
+
+```
+
+> **Factory ka Secret:** Tu input dega (`"HEAVY_FIGHT"`), wo tujhe brand-new **Suit ka Object** `new` karke hand-over kar degi.
+
+---
+
+### 2. Strategy Pattern = Suit Ke Weapons Swap Karna (Behavior)
+
+Ab Tony Suit ke andar pehle se pehna hua hai (**Suit Object same hai**). Dushman door hai ya paas, uske hisab se wo **Weapon Mode (Strategy)** badalta hai.
+
+```java
+// Weapon Strategy Interface
+interface WeaponStrategy {
+    void fire();
+}
+
+class RepulsorRay implements WeaponStrategy {
+    public void fire() { System.out.println("Pew Pew! Long range Repulsor Beam!"); }
+}
+
+class NanoBlade implements WeaponStrategy {
+    public void fire() { System.out.println("Slash! Close range Nano Sword!"); }
+}
+
+// CONTEXT: Suit Object PEHLE SE BANA HUA HAI (Same Suit)
+class ActiveSuitContext {
+    private WeaponStrategy currentWeapon;
+
+    // Weapon Change karne ka System (No new Suit created)
+    public void setWeapon(WeaponStrategy weapon) {
+        this.currentWeapon = weapon;
+    }
+
+    public void attack() {
+        currentWeapon.fire(); // Active weapon execution
+    }
+}
+
+// USAGE:
+ActiveSuitContext armor = new ActiveSuitContext(); // EK HI SUIT HAI
+
+// Step A: Dushman door hai -> Repulsor Beam Mode
+armor.setWeapon(new RepulsorRay());
+armor.attack();
+
+// Step B: Dushman paas aaya -> Suit NAYA NAHI BANA, bas Weapon Mode change kiya!
+armor.setWeapon(new NanoBlade());
+armor.attack();
+
+```
+
+> **Strategy ka Secret:** Suit naya nahi khareeda/bana! Wahi Suit pehne-pehne bas **Weapon Chip (Behavior)** badal di.
+
+---
+
+### 3. Combo (Factory + Strategy Ek Saath)
+
+Real life code mein dono milkar kaam karte hain:
+
+1. **Factory** check karti hai ki kaunsa Weapon Mode chahiye aur uska **Weapon Object create** karti hai.
+2. **Active Suit** us Weapon Object ko apne andar **plug-in karke fire** karta hai.
+
+```java
+public class AvengersBattle {
+    public static void main(String[] args) {
+        ActiveSuitContext suit = new ActiveSuitContext(); // 1. Suit pehle se pehna hua hai
+
+        String enemyDistance = "CLOSE"; // User / Game Situation Input
+
+        // STEP 1 (FACTORY): Situation ke hisab se Sahi Weapon ka Object banao
+        WeaponStrategy weaponFromFactory = WeaponFactory.getWeapon(enemyDistance); 
+
+        // STEP 2 (STRATEGY): Wahi Suit ke andar wo Weapon plug-in kar do
+        suit.setWeapon(weaponFromFactory);
+
+        // STEP 3: Execute!
+        suit.attack(); 
+    }
+}
+
+```
+
+---
+
+### Final Iron Man Cheatsheet
+
+* **Factory:** **"JARVIS, mere liye naya Hulkbuster Suit BANAO!"** *(Creation of new Object)*
+* **Strategy:** **"JARVIS, is waqt isi Suit mein Nano Blade ACTIVATE KARO!"** *(Behavior change on existing Object)*
