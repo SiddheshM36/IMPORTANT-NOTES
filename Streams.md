@@ -149,3 +149,9 @@ So interview mein ye yaad rakh:
 > **`Stream<Integer>` → `mapToInt()` → `IntStream` → numeric operations like `sum()`, `average()`, `min()`, `max()`.**
 
 Aur haan, **har baar `mapToInt()` zaruri nahi hai**. Agar sirf filtering, sorting, collecting etc. karna hai, `Stream<Integer>` perfectly fine hai.
+
+
+
+
+
+numbers.stream().mapToInt(x->x).min().orElse(-1)     => sum,max, min humesha mapToInt kyuki stream integers ka stream dedi hai jismai ye methods nhi hai toh aapne ko convet krna hoga IntStream mai
