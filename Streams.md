@@ -2986,3 +2986,356 @@ PARTITIONINGBY → true/false mein divide karna hai?
 OPTIONAL → result ho bhi sakta hai, nahi bhi.
 ```
 
+
+
+
+
+Bhai `collectingAndThen()` naam thoda scary hai, but concept **bahut simple** hai.
+
+## `collectingAndThen()` kya karta hai?
+
+Iska simple meaning:
+
+> **Pehle collect karo → phir collected result par ek final operation karo.**
+
+Syntax:
+
+```java
+Collectors.collectingAndThen(
+    collector,
+    finisher
+)
+```
+
+Flow:
+
+```text
+Stream
+  ↓
+Collector
+  ↓
+Intermediate collected result
+  ↓
+Finisher function
+  ↓
+Final result
+```
+
+### Simple example
+
+Maan le:
+
+```java
+List<String> names = Arrays.asList("Sid", "Rahul", "Amit");
+```
+
+Pehle list collect karni hai, phir usko **unmodifiable** banana hai:
+
+```java
+List<String> result =
+    names.stream()
+         .collect(
+             Collectors.collectingAndThen(
+                 Collectors.toList(),
+                 Collections::unmodifiableList
+             )
+         );
+```
+
+Yahan:
+
+```java
+Collectors.toList()
+```
+
+pehle:
+
+```text
+["Sid", "Rahul", "Amit"]
+```
+
+banata hai.
+
+Phir:
+
+```java
+Collections::unmodifiableList
+```
+
+us list ko immutable/unmodifiable bana deta hai.
+
+---
+
+# Sabse important example: Highest salary by department
+
+Ye interview mein kaafi useful hai.
+
+Employees:
+
+```text
+IT     → Sid 80000
+IT     → Rahul 100000
+HR     → Amit 70000
+HR     → Raj 90000
+```
+
+Agar hume chahiye:
+
+```text
+IT → Rahul
+HR → Raj
+```
+
+Pehle:
+
+```java
+Collectors.maxBy(...)
+```
+
+use karenge.
+
+Lekin `maxBy()` ka result hota hai:
+
+```java
+Optional<Employee>
+```
+
+Toh:
+
+```text
+Department
+     ↓
+maxBy()
+     ↓
+Optional<Employee>
+```
+
+Agar hume direct `Employee` chahiye, toh `collectingAndThen()` laga sakte hain:
+
+```java
+Map<String, Employee> result =
+    employees.stream()
+             .collect(
+                 Collectors.groupingBy(
+                     Employee::getDepartment,
+                     Collectors.collectingAndThen(
+                         Collectors.maxBy(
+                             Comparator.comparingInt(
+                                 Employee::getSalary
+                             )
+                         ),
+                         Optional::get
+                     )
+                 )
+             );
+```
+
+### Iska flow samajh:
+
+```text
+employees
+    ↓
+groupingBy(department)
+    ↓
+IT employees
+    ↓
+maxBy(salary)
+    ↓
+Optional<Employee>
+    ↓
+Optional::get
+    ↓
+Employee
+```
+
+So final:
+
+```text
+IT → Rahul
+HR → Raj
+```
+
+---
+
+# Ek aur easy example
+
+Suppose:
+
+```java
+List<Integer> numbers =
+    Arrays.asList(10, 20, 30, 40);
+```
+
+Pehle list collect karo:
+
+```java
+Collectors.toList()
+```
+
+phir us list ka size nikaalo:
+
+```java
+List<Integer> → Integer
+```
+
+Code:
+
+```java
+Integer count =
+    numbers.stream()
+           .collect(
+               Collectors.collectingAndThen(
+                   Collectors.toList(),
+                   List::size
+               )
+           );
+```
+
+Result:
+
+```text
+4
+```
+
+Yahan:
+
+```text
+toList()
+   ↓
+[10,20,30,40]
+   ↓
+List::size
+   ↓
+4
+```
+
+---
+
+# `collectingAndThen()` ka real use
+
+### Without collectingAndThen
+
+```java
+List<Employee> list =
+    employees.stream()
+             .collect(Collectors.toList());
+
+Employee result =
+    list.stream()
+        .max(Comparator.comparingInt(Employee::getSalary))
+        .orElse(null);
+```
+
+Do steps hain.
+
+### With collectingAndThen
+
+```java
+Employee result =
+    employees.stream()
+             .collect(
+                 Collectors.collectingAndThen(
+                     Collectors.toList(),
+                     list -> list.stream()
+                                 .max(
+                                     Comparator.comparingInt(
+                                         Employee::getSalary
+                                     )
+                                 )
+                                 .orElse(null)
+                 )
+             );
+```
+
+Matlab **collection banne ke immediately baad final transformation** kar diya.
+
+---
+
+# `groupingBy + collectingAndThen`
+
+Ye pattern yaad rakh:
+
+```java
+groupingBy(
+    KEY,
+    collectingAndThen(
+        COLLECTOR,
+        FINISHER
+    )
+)
+```
+
+Example:
+
+```java
+Map<String, Integer> result =
+    employees.stream()
+             .collect(
+                 Collectors.groupingBy(
+                     Employee::getDepartment,
+                     Collectors.collectingAndThen(
+                         Collectors.maxBy(
+                             Comparator.comparingInt(
+                                 Employee::getSalary
+                             )
+                         ),
+                         emp -> emp
+                             .map(Employee::getSalary)
+                             .orElse(0)
+                     )
+                 )
+             );
+```
+
+Result:
+
+```text
+IT → 100000
+HR → 90000
+```
+
+---
+
+## `collectingAndThen` vs `map`
+
+Ye important interview point hai.
+
+### `map()`
+
+Stream ke **har element** ko transform karta hai:
+
+```java
+stream.map(x -> x * 2)
+```
+
+### `collectingAndThen()`
+
+**Poora collection/result collect hone ke baad** final transformation karta hai:
+
+```java
+collect(
+    collectingAndThen(
+        toList(),
+        List::size
+    )
+)
+```
+
+So simple yaad rakh:
+
+```text
+map()
+    → element level transformation
+
+collectingAndThen()
+    → collected result level transformation
+```
+
+### Interview mein agar pooche "What is collectingAndThen?"
+
+Tu bol:
+
+> "`collectingAndThen` is a downstream collector that first performs the specified collection operation and then applies a finishing function to the collected result."
+
+Bas ye line + example yaad kar le.
+
