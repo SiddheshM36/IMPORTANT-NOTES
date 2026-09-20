@@ -206,3 +206,25 @@ Ye cross-question interview mein **bahut strong answer** banega.
 <img width="1536" height="1024" alt="ChatGPT Image Sep 21, 2026, 01_42_58 AM" src="https://github.com/user-attachments/assets/aa441d21-983f-4488-a90d-d1b10071d742" />
 <img width="1024" height="1536" alt="ChatGPT Image Sep 21, 2026, 01_43_47 AM" src="https://github.com/user-attachments/assets/363b23ff-ac9e-4a86-9ea8-d3eb0ace8a8a" />
 <img width="1222" height="1287" alt="ChatGPT Image Sep 21, 2026, 02_22_23 AM" src="https://github.com/user-attachments/assets/46634d23-77ac-4f00-b4a5-2b3eb1df0c94" />
+
+
+
+
+⭐⭐⭐⭐⭐
+1. Partition Key
+2. Clustering Key
+3. Primary Key
+4. Partition
+5. Replication Factor
+6. Consistency Levels
+7. Write Path
+8. Read Path
+9. Tombstones
+10. Compaction
+
+⭐⭐⭐⭐
+11. Gossip
+12. Snitch
+13. Hot/Large partitions
+14. Data modeling
+15. Cassandra vs SQL
