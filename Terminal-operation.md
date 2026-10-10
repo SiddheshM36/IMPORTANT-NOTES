@@ -78,6 +78,31 @@ One technical detail: This is the typical execution model, not a guarantee that 
 
 Bhai, ab interviewer ko convince karne ke liye ye line especially bolna:
 
+
+
+
+
+Haan bhai, is old Java trick mein `System.exit(0)` isliye lagate hain taaki JVM static block execute karne ke baad terminate ho jaaye, aur `main()` missing hone ki error tak na pahunche.
+
+```
+public class Main {
+    static {
+        System.out.println("Static block");
+        System.exit(0);
+    }
+}
+```
+
+### Internally kya hota hai?
+
+1. JVM `Main` class ko load karti hai.
+2. Class initialization ke waqt static block execute hota hai.
+3. `"Static block"` print hota hai.
+4. `System.exit(0)` JVM ko terminate kar deta hai.
+
+Lekin important: Ye traditional interview trick hai, modern Java mein reliable solution nahi. `System.exit(0)` program ko forcefully terminate karta hai, isliye normal applications mein ise `main()` ke replacement ke roop mein use nahi karna chahiye.
+
+Interview mein bolna: “The static initializer executes during class initialization. `System.exit(0)` was used in the classic trick to terminate the JVM before the missing-main error, but it is not a standard way to launch a Java application.”
 “Terminal operations trigger pipeline evaluation, but the actual execution is implemented through the stream pipeline machinery. In the usual sequential execution path, a `Spliterator` traverses the source, chained `Sink` operations process each element, and the terminal sink computes the final result.”
 
 Ye answer basic definition se zyada strong hai because you're explaining the internal mechanism, not just saying that terminal operations execute lazy operations.
