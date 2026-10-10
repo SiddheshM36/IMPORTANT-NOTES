@@ -342,3 +342,102 @@ Agar interviewer pooche, “Why is Cassandra fast for writes but can be slow for
 > Cassandra uses an append-oriented commit log, in-memory Memtables, and immutable SSTables, which make its write path efficient. Reads may need to locate data across multiple SSTables, reconcile versions and tombstones, and fetch data from disk. However, reads are also fast when tables are designed around the required partition-key queries, partitions are well-sized, and compaction and caching are healthy.
 
 Final takeaway: Cassandra write-optimized architecture rakhta hai, lekin read performance ka biggest factor hai data modeling + partition-key design + SSTable/compaction health. Well-designed Cassandra read workloads bhi high throughput aur low latency achieve kar sakte hain.
+
+
+
+
+Bhai, ye Cassandra ka cell-level reconciliation hai. Ekdum basic example se samajh. 🔥
+
+## 1. Maan le ek account ki row hai
+
+Cassandra mein `account_id = A101` ke liye pehle ye data insert hua:
+
+```
+INSERT INTO account (account_id, name, balance)
+VALUES ('A101', 'Rahul', 5000);
+```
+
+Baad mein balance update hua:
+
+```
+UPDATE account
+SET balance = 7000
+WHERE account_id = 'A101';
+```
+
+Ab data different SSTables mein ho sakta hai.
+
+### SSTable 1 — older data
+
+account_id
+
+`A101`
+
+name
+
+`Rahul`
+
+balance
+
+`5000`
+
+Purana balance
+
+### SSTable 2 — updated data
+
+account_id
+
+`A101`
+
+balance
+
+`7000`
+
+Is SSTable mein sirf balance ka naya cell ho sakta hai; `name` ka naya version zaroori nahi.
+
+### Logical result after reconciliation
+
+account_id
+
+`A101`
+
+name
+
+Rahul
+
+balance
+
+7000
+
+Notice kar: SSTable 2 mein `name` nahi hai, phir bhi Cassandra `name = Rahul` return kar sakta hai, kyunki valid older value SSTable 1 mein available hai.
+
+## 2. Cassandra kaise decide karta hai?
+
+Cassandra har column/cell ke versions ko independently reconcile kar sakta hai.
+
+| Column    | SSTable 1 | SSTable 2      | Logical result |
+| --------- | --------- | -------------- | -------------- |
+| `name`    | Rahul     | No newer value | Rahul          |
+| `balance` | 5000      | 7000           | 7000           |
+
+Maan le timestamps:
+
+- `name = Rahul` → timestamp `100`
+- `balance = 5000` → timestamp `100`
+- `balance = 7000` → timestamp `200`
+
+Balance ke liye timestamp `200` wala version newer hai, isliye result `7000` hoga. Name ke liye koi newer competing version nahi hai, toh `Rahul` rahega.
+
+## 3. Kya poori row ek SSTable se read hoti hai?
+
+Nahi, zaroori nahi. Cassandra multiple SSTables aur Memtable se required cells collect karke logical row reconstruct kar sakta hai.
+
+Aur jab compaction hoti hai, toh ye data SSTables mein merge ho sakta hai. Lekin compaction ka wait karna zaroori nahi—read ke time bhi reconciliation ho sakta hai.
+
+Ek caveat: Agar `name` delete kar diya gaya ho, toh tombstone us older value ko suppress kar sakta hai. Cassandra simply purani value ko wapas use nahi karega.
+
+## 4. Interview mein aise explain karna
+
+> Cassandra uses cell-level reconciliation. When a partition exists in multiple SSTables, Cassandra reads the relevant versions and reconciles each cell using timestamps and tombstone rules. The final logical row can combine the latest valid values from different SSTables rather than coming from a single SSTable.
+
+Ab ek chhota question: SSTable 1 mein `name = Rahul` timestamp `100` par hai. SSTable 2 mein `name = Amit` timestamp `200` par hai. Read karne par kaunsa name milega, aur kyun?
